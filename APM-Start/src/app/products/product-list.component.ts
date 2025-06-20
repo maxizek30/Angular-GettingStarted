@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { filter } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 import { IProduct } from 'src/api/products/product';
 import { ProductService } from './product.service';
 
@@ -13,6 +13,8 @@ export class ProductListComponent implements OnInit {
   imageWidth: number = 50;
   imageMargin: number = 2;
   showImage: boolean = false;
+  errorMessage: string = '';
+  sub!: Subscription;
 
   private _listFilter: string = '';
   get listFilter(): string {
@@ -41,8 +43,17 @@ export class ProductListComponent implements OnInit {
   }
   ngOnInit(): void {
     this.listFilter = 'cart';
-    this.products = this.productService.getProducts();
-    this.filteredProducts = this.products;
+    this.sub = this.productService.getProducts().subscribe({
+      next: (products) => {
+        this.products = products;
+        this.filteredProducts = products;
+      },
+      error: (err) => (this.errorMessage = err),
+    });
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe();
   }
 
   onRatingClicked(message: string): void {
